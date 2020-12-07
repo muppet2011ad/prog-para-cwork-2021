@@ -11,6 +11,7 @@ void out_lines (FILE* dest, char **lines, int num_lines, int reverse);
 int str_def_cmp (const void *str1, const void *str2);
 int str_num_cmp (const void *str1, const void *str2);
 long long get_str_num (char* str, int *trailing_start);
+void cleanup(char **lines, int num_lines);
 
 typedef struct flags {
     unsigned int file_specified : 1;
@@ -100,6 +101,7 @@ int main(int argc, char *argv[]) {
     else {
         out_lines(stdout, lines, num_lines, status.opt_r); // If no output flag, write output to stdout
     }
+    cleanup(lines, num_lines);
     return 0;
 }
 
@@ -177,4 +179,11 @@ long long get_str_num (char* str, int *trailing_start) { // Looks for number fro
        numerical_section[counter] = '\0'; // Add the null-terminator (strncpy doesn't do this automatically which causes issues)
        return atoll(numerical_section); // Convert this to a long long and return
    }
+}
+
+void cleanup(char **lines, int num_lines) {
+    for (int i = 0; i < num_lines; i++) {
+        free(lines[i]);
+    }
+    free(lines);
 }
