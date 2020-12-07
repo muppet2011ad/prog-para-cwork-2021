@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
     }
 
     flags status = {0, 0, 0 ,0}; // Initialises all flags to zero
+    const char* opt_o_arg;
 
     // int file_specified = 0; // Tracks whether flag has been specified
     // int opt_o = 0;
@@ -40,6 +41,14 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'o': // TODO: Handle argument of output stream
                     status.opt_o = 1;
+                    if (i+1 < argc) {
+                        opt_o_arg = argv[i+1];
+                        i++;
+                    }
+                    else{
+                        fprintf(stderr, "Specify filename for option -o.\n\n");
+                        exit(1);
+                    }
                     break;
                 case 'n': // Otherwise set flags
                     status.opt_n = 1;
@@ -57,6 +66,7 @@ int main(int argc, char *argv[]) {
             }
             else { // Should we load the file
                 read_lines(newfile, &lines, &num_lines, &lines_arr_size); // Read its contents into memory
+                fclose(newfile);
                 status.file_specified = 1; // Set status flag
             }
         }
@@ -67,7 +77,20 @@ int main(int argc, char *argv[]) {
     }
 
     qsort(lines, num_lines, sizeof(char*), str_sort_cmp);
-    out_lines(stdout, lines, num_lines);
+
+    if (status.opt_o) {
+        FILE *outfile = fopen(opt_o_arg, "w");
+        if (outfile == NULL) {
+            fprintf(stderr, "Failed to open %s for writing", opt_o_arg);
+        }
+        else {
+            out_lines(outfile, lines, num_lines);
+            fclose(outfile);
+        }
+    }
+    else {
+        out_lines(stdout, lines, num_lines);
+    }
     return 0;
 }
 
