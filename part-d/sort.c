@@ -7,7 +7,7 @@
 #define BUFFER_SIZE 1024 // Max line length when reading in data
 
 char **read_lines (FILE* src, char ***lines, int *num_lines, int *max_lines);
-void out_lines (FILE* dest, char **lines, int num_lines);
+void out_lines (FILE* dest, char **lines, int num_lines, int reverse);
 int str_def_cmp (const void *str1, const void *str2);
 int str_num_cmp (const void *str1, const void *str2);
 long long get_str_num (char* str, int *trailing_start);
@@ -18,7 +18,7 @@ typedef struct flags {
     unsigned int opt_n : 1;
     unsigned int opt_r : 1;
     unsigned int opt_h : 1;
-} flags; // Bitfield to store flags (saves an incredible 4 bytes of memory on my machine)
+} flags; // Bitfield to store flags (saves an incredible 16 bytes of memory on my machine)
 
 int main(int argc, char *argv[]) {
     int num_lines = 0;
@@ -31,11 +31,6 @@ int main(int argc, char *argv[]) {
 
     flags status = {0, 0, 0 ,0, 0}; // Initialises all flags to zero
     const char* opt_o_arg;
-
-    // int file_specified = 0; // Tracks whether flag has been specified
-    // int opt_o = 0;
-    // int opt_n = 0;
-    // int opt_r = 0;
 
     for (int i = 1; i < argc; i++) { // Iterate through arguments
         if (argv[i][0] == '-') { // If it's setting a flag
@@ -57,8 +52,11 @@ int main(int argc, char *argv[]) {
                 case 'n': // Otherwise set flags
                     status.opt_n = 1;
                     break;
-                case 'h':
+                case 'r':
                     status.opt_r = 1;
+                    break;
+                case 'h':
+                    status.opt_h = 1;
                     break;
             }
         }
@@ -80,23 +78,26 @@ int main(int argc, char *argv[]) {
         read_lines(stdin, &lines, &num_lines, &lines_arr_size); // Read from stdin
     }
 
-    if (status.opt_n) {
-        qsort(lines, num_lines, sizeof(char*), str_num_cmp);
+    if (status.opt_n) { // If numerical sort flag is set
+        qsort(lines, num_lines, sizeof(char*), str_num_cmp); // Sort using the numeric comparator
     }
-    //qsort(lines, num_lines, sizeof(char*), str_def_cmp);
+    else {
+        qsort(lines, num_lines, sizeof(char*), str_def_cmp); // Otherwise sort using the default comparator
+    }
 
-    if (status.opt_o) {
-        FILE *outfile = fopen(opt_o_arg, "w");
+    if (status.opt_o) { // If the output flag is set
+        FILE *outfile = fopen(opt_o_arg, "w"); // Attempt to load specified file for writing
         if (outfile == NULL) {
-            fprintf(stderr, "Failed to open %s for writing", opt_o_arg);
+            fprintf(stderr, "Failed to open %s for writing", opt_o_arg); // If we fail, complain and exit
+            exit(1);
         }
         else {
-            out_lines(outfile, lines, num_lines);
-            fclose(outfile);
+            out_lines(outfile, lines, num_lines, status.opt_r); // Output to file
+            fclose(outfile); // Close file
         }
     }
     else {
-        out_lines(stdout, lines, num_lines);
+        out_lines(stdout, lines, num_lines, status.opt_r); // If no output flag, write output to stdout
     }
     return 0;
 }
@@ -129,9 +130,14 @@ char **read_lines (FILE* src, char ***lines, int *num_lines, int *lines_arr_size
     return *lines; // Return a pointer to the array
 }
 
-void out_lines (FILE* dest, char **lines, int num_lines) {
+void out_lines (FILE* dest, char **lines, int num_lines, int reverse) {
     for (int i = 0; i < num_lines; i++) {
-        fprintf(dest, lines[i]);
+        if (reverse) {
+            fprintf(dest, lines[num_lines-(i+1)]); // If reverse, flip the order
+        }
+        else {
+            fprintf(dest, lines[i]); // Otherwise print normally
+        }
     }
 }
 
