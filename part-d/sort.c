@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
                 case 'h':
                     status.opt_h = 1;
                     usage_info();
+                    cleanup(lines, num_lines);
                     exit(0);
                     break;
             }
