@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
         if (argv[i][0] == '-') { // If it's setting a flag
             switch (argv[i][1]) { // Switch through flags
                 default: // If flag not recognised
-                    fprintf(stderr, "Option -%c is not valid.\n\n", argv[i][1]);
+                    fprintf(stderr, "sort: invalid option -- '%c'\nTry sort -h for more information.\n", argv[i][1]);
+                    exit(1);
                     break;
                 case 'o':
                     status.opt_o = 1;
@@ -63,7 +64,7 @@ int main(int argc, char *argv[]) {
         else { // If it's not an argument, then it's a file to use as input
             FILE *newfile = fopen(argv[i], "r"); // Attempt to open the file
             if (newfile == NULL) { // If that fails
-                fprintf(stderr, "Failed to read file %s", argv[i]); // Display error
+                fprintf(stderr, "sort: cannot read: %s\n", argv[i]); // Display error
                 exit(1); // Exit
             }
             else { // Should we load the file
@@ -88,7 +89,7 @@ int main(int argc, char *argv[]) {
     if (status.opt_o) { // If the output flag is set
         FILE *outfile = fopen(opt_o_arg, "w"); // Attempt to load specified file for writing
         if (outfile == NULL) {
-            fprintf(stderr, "Failed to open %s for writing", opt_o_arg); // If we fail, complain and exit
+            fprintf(stderr, "sort: open failed: %s\n", opt_o_arg); // If we fail, complain and exit
             exit(1);
         }
         else {
