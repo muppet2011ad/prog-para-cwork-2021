@@ -6,6 +6,7 @@
 #define BUFFER_SIZE 1024 // Max line length when reading in data
 
 char **read_lines (FILE* src, char ***lines, int *num_lines, int *max_lines);
+void out_lines (FILE* dest, char **lines, int num_lines);
 
 int main() {
     int num_lines = 0;
@@ -44,4 +45,9 @@ char **read_lines (FILE* src, char ***lines, int *num_lines, int *lines_arr_size
     }
     return *lines; // Return a pointer to the array
 }
+
+void out_lines (FILE* dest, char **lines, int num_lines) {
+    for (int i = 0; i < num_lines; i++) {
+        fprintf(dest, lines[i]);
+    }
 }
