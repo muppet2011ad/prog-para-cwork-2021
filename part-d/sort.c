@@ -13,7 +13,7 @@ typedef struct flags {
     unsigned int file_specified : 1;
     unsigned int opt_o : 1;
     unsigned int opt_n : 1;
-    unsigned int opt_h : 1;
+    unsigned int opt_r : 1;
 } flags; // Bitfield to store flags (saves an incredible 3 bytes of memory on my machine)
 
 int main(int argc, char *argv[]) {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     // int file_specified = 0; // Tracks whether flag has been specified
     // int opt_o = 0;
     // int opt_n = 0;
-    // int opt_h = 0;
+    // int opt_r = 0;
 
     for (int i = 1; i < argc; i++) { // Iterate through arguments
         if (argv[i][0] == '-') { // If it's setting a flag
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
                     status.opt_n = 1;
                     break;
                 case 'h':
-                    status.opt_h = 1;
+                    status.opt_r = 1;
                     break;
             }
         }
