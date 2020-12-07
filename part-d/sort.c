@@ -9,7 +9,14 @@ char **read_lines (FILE* src, char ***lines, int *num_lines, int *max_lines);
 void out_lines (FILE* dest, char **lines, int num_lines);
 int str_sort_cmp (const void *str1, const void *str2);
 
-int main() {
+typedef struct flags {
+    unsigned int file_specified : 1;
+    unsigned int opt_o : 1;
+    unsigned int opt_n : 1;
+    unsigned int opt_h : 1;
+} flags; // Bitfield to store flags (saves an incredible 3 bytes of memory on my machine)
+
+int main(int argc, char *argv[]) {
     int num_lines = 0;
     int lines_arr_size = LINES_ARR_LEN;
     char **lines = calloc(LINES_ARR_LEN, sizeof(char*)); // Allocate memory to store lines
@@ -18,7 +25,47 @@ int main() {
         exit(1); // And exit
     }
 
-    read_lines(stdin, &lines, &num_lines, &lines_arr_size);
+    flags status = {0, 0, 0 ,0}; // Initialises all flags to zero
+
+    // int file_specified = 0; // Tracks whether flag has been specified
+    // int opt_o = 0;
+    // int opt_n = 0;
+    // int opt_h = 0;
+
+    for (int i = 1; i < argc; i++) { // Iterate through arguments
+        if (argv[i][0] == '-') { // If it's setting a flag
+            switch (argv[i][1]) { // Switch through flags
+                default: // If flag not recognised
+                    fprintf(stderr, "Option -%c is not valid.\n\n", argv[i][1]);
+                    break;
+                case 'o': // TODO: Handle argument of output stream
+                    status.opt_o = 1;
+                    break;
+                case 'n': // Otherwise set flags
+                    status.opt_n = 1;
+                    break;
+                case 'h':
+                    status.opt_h = 1;
+                    break;
+            }
+        }
+        else { // If it's not an argument, then it's a file to use as input
+            FILE *newfile = fopen(argv[i], "r"); // Attempt to open the file
+            if (newfile == NULL) { // If that fails
+                fprintf(stderr, "Failed to read file %s", argv[i]); // Display error
+                exit(1); // Exit
+            }
+            else { // Should we load the file
+                read_lines(newfile, &lines, &num_lines, &lines_arr_size); // Read its contents into memory
+                status.file_specified = 1; // Set status flag
+            }
+        }
+    }
+
+    if (!status.file_specified) { // If we didn't load any input files
+        read_lines(stdin, &lines, &num_lines, &lines_arr_size); // Read from stdin
+    }
+
     qsort(lines, num_lines, sizeof(char*), str_sort_cmp);
     out_lines(stdout, lines, num_lines);
     return 0;
