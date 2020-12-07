@@ -1,20 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define LINES_ARR_LEN 5 // Size interval for the lines array
 #define BUFFER_SIZE 1024 // Max line length when reading in data
 
 char **read_lines (FILE* src, char ***lines, int *num_lines, int *max_lines);
 void out_lines (FILE* dest, char **lines, int num_lines);
-int str_sort_cmp (const void *str1, const void *str2);
+int str_def_cmp (const void *str1, const void *str2);
+int str_num_cmp (const void *str1, const void *str2);
+long long get_str_num (char* str, int *trailing_start);
 
 typedef struct flags {
     unsigned int file_specified : 1;
     unsigned int opt_o : 1;
     unsigned int opt_n : 1;
     unsigned int opt_r : 1;
-} flags; // Bitfield to store flags (saves an incredible 3 bytes of memory on my machine)
+    unsigned int opt_h : 1;
+} flags; // Bitfield to store flags (saves an incredible 4 bytes of memory on my machine)
 
 int main(int argc, char *argv[]) {
     int num_lines = 0;
@@ -25,7 +29,7 @@ int main(int argc, char *argv[]) {
         exit(1); // And exit
     }
 
-    flags status = {0, 0, 0 ,0}; // Initialises all flags to zero
+    flags status = {0, 0, 0 ,0, 0}; // Initialises all flags to zero
     const char* opt_o_arg;
 
     // int file_specified = 0; // Tracks whether flag has been specified
@@ -39,7 +43,7 @@ int main(int argc, char *argv[]) {
                 default: // If flag not recognised
                     fprintf(stderr, "Option -%c is not valid.\n\n", argv[i][1]);
                     break;
-                case 'o': // TODO: Handle argument of output stream
+                case 'o':
                     status.opt_o = 1;
                     if (i+1 < argc) {
                         opt_o_arg = argv[i+1];
@@ -76,7 +80,10 @@ int main(int argc, char *argv[]) {
         read_lines(stdin, &lines, &num_lines, &lines_arr_size); // Read from stdin
     }
 
-    qsort(lines, num_lines, sizeof(char*), str_sort_cmp);
+    if (status.opt_n) {
+        qsort(lines, num_lines, sizeof(char*), str_num_cmp);
+    }
+    //qsort(lines, num_lines, sizeof(char*), str_def_cmp);
 
     if (status.opt_o) {
         FILE *outfile = fopen(opt_o_arg, "w");
@@ -128,6 +135,39 @@ void out_lines (FILE* dest, char **lines, int num_lines) {
     }
 }
 
-int str_sort_cmp (const void *str1, const void *str2) {
+int str_def_cmp (const void *str1, const void *str2) {
     return strcmp(*(char**) str1, *(char**) str2);
+}
+
+int str_num_cmp (const void *str1, const void *str2) {
+    // Using https://unix.stackexchange.com/a/382805 as a basis for how "sort -n" actually sorts lines as man sort was not helpful
+    char *a = *(char**) str1;
+    char *b = *(char**) str2; // Casts both void pointers to strings
+    int counter_a;
+    int counter_b; // Tracks where the first non-numeric character occurs
+    long long a_numeric = get_str_num(a, &counter_a);
+    long long b_numeric = get_str_num(b, &counter_b); // Gets the numeric values of the strings (per rule 1 on the stackexchange link)
+    if (a_numeric < b_numeric) { return -1; }
+    else if (a_numeric > b_numeric) { return 1; } // If these values are different, we have the comparison done and can finish here
+    else {
+        return strcmp(&(a[counter_a]), &(b[counter_b])); // Otherwise compare the rest of the string normally (per rule 2)
+    }
+}
+
+long long get_str_num (char* str, int *trailing_start) { // Looks for number from start of string to first non-digit char. Returns number if found, 0 otherwise.
+   int is_negative = (str[0] == '-'); // Checks for a minus sign
+   int counter = 0; // Creates a counter
+   char numerical_section[strlen(str)+1]; // String to store numerical part of string (which can't be longer than the original string)
+   while (isdigit(str[counter]) || (counter == 0 && is_negative)) { // Whilst we have a digit (or the leading minus sign)
+       counter++; // Increment counter
+   }
+   *trailing_start = counter; // Copy counter into parameter to pass back value
+   if (counter == 0 || (is_negative && counter == 1)) { // If we didn't encounter a numeric character
+       return 0; // Treat as zero per rule 3 on the stackexchange link
+   }
+   else {
+       strncpy(numerical_section, str, counter); // Copy the leading numeric section into the string
+       numerical_section[counter] = '\0'; // Add the null-terminator (strncpy doesn't do this automatically which causes issues)
+       return atoll(numerical_section); // Convert this to a long long and return
+   }
 }
