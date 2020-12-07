@@ -7,6 +7,7 @@
 
 char **read_lines (FILE* src, char ***lines, int *num_lines, int *max_lines);
 void out_lines (FILE* dest, char **lines, int num_lines);
+int str_sort_cmp (const void *str1, const void *str2);
 
 int main() {
     int num_lines = 0;
@@ -16,8 +17,13 @@ int main() {
         fprintf(stderr, "Error: failed to allocate memory when reading in string!"); // Give an error
         exit(1); // And exit
     }
-    int lines_size = LINES_ARR_LEN; // Keep track of the size of the array (useful when reallocing)
-    int num_lines = 0; // Keep track of how many items are in the array
+
+    read_lines(stdin, &lines, &num_lines, &lines_arr_size);
+    qsort(lines, num_lines, sizeof(char*), str_sort_cmp);
+    out_lines(stdout, lines, num_lines);
+    return 0;
+}
+
 char **read_lines (FILE* src, char ***lines, int *num_lines, int *lines_arr_size) {
     char input_buffer[BUFFER_SIZE]; // Create buffer to receive input
     while (!feof(src)) { // Until we reach EOF
@@ -50,4 +56,8 @@ void out_lines (FILE* dest, char **lines, int num_lines) {
     for (int i = 0; i < num_lines; i++) {
         fprintf(dest, lines[i]);
     }
+}
+
+int str_sort_cmp (const void *str1, const void *str2) {
+    return strcmp(*(char**) str1, *(char**) str2);
 }
