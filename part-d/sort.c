@@ -12,6 +12,7 @@ int str_def_cmp (const void *str1, const void *str2);
 int str_num_cmp (const void *str1, const void *str2);
 long long get_str_num (char* str, int *trailing_start);
 void cleanup(char **lines, int num_lines);
+void usage_info();
 
 typedef struct flags {
     unsigned int file_specified : 1;
@@ -59,6 +60,8 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'h':
                     status.opt_h = 1;
+                    usage_info();
+                    exit(0);
                     break;
             }
         }
@@ -186,4 +189,8 @@ void cleanup(char **lines, int num_lines) {
         free(lines[i]);
     }
     free(lines);
+}
+
+void usage_info() {
+    printf("Sorts input file(s) (or stdin if none specified). Supports options:\n\t-o [FILENAME]: Directs sorted output to file. stdout used if not set.\n\t-n: Compare according to string numerical value.\n\t-r: Reverse sort order.\n\t-h: Display usage information.\nUsage: ./sort [OPTION] ... [FILE] ...\nI have managed to implement all of this section of the coursework (assuming my understanding of the -n option is sound).\n");
 }
