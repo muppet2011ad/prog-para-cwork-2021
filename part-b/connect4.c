@@ -35,6 +35,13 @@ void read_in_file(FILE *infile, board u){
     u->grid = lines;
     u->height = rows;
     u->width = strlen(lines[0]);
+    for (int i = 0; i < u->height; i++) {
+        for (int j = 0; j < u->width; j++) { // Correct any capitals to lowercase and remove any invalid characters
+            if (u->grid[i][j] == 'X') { u->grid[i][j] = 'x'; }
+            else if (u->grid[i][j] == 'O') { u->grid[i][j] = 'o'; }
+            else if (!(u->grid[i][j] == 'x') && !(u->grid[i][j] == 'o') && !(u->grid[i][j] == '.')) { u->grid[i][j] = '.'; }
+        }
+    }
 }
 
 void write_out_file(FILE *outfile, board u){
