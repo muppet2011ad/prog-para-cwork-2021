@@ -49,7 +49,16 @@ void write_out_file(FILE *outfile, board u){
 }
 
 char next_player(board u){
-//You may put code here
+    int num_x;
+    int num_o;
+    for (int i = 0; i < u->height; i++) {
+        for (int j = 0; j < u->width; j++) {
+            if (u->grid[i][j] == 'o') { num_o++; }
+            else if (u->grid[i][j] == 'x') { num_x++; }
+        }
+    }
+    if (num_x <= num_o) { return 'x'; }
+    else { return 'o'; }
 }
 
 char current_winner(board u){
