@@ -98,6 +98,10 @@ void play_move(struct move m, board u){
 
 char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d with a few alterations since the functionality is very similar
     char **lines = calloc(5, sizeof(char*));
+    if (lines == NULL) {
+        fprintf(stderr, "Error: failed to allocate memory when reading in string!");
+        exit(1);
+    }
     int lines_arr_size = 5;
     char input_buffer[512]; // Create buffer to receive input
     while (!feof(src)) { // Until we reach EOF
