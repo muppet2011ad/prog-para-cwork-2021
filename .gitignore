@@ -8,3 +8,5 @@ part-d/numtest
 part-d/astar
 
 *.json
+
+part-b/connect4
