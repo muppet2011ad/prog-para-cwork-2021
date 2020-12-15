@@ -66,11 +66,14 @@ char current_winner(board u){
 }
 
 struct move read_in_move(board u){
-//You may put code here
-  printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
-//You may put code here
-  printf("Player %c enter row to rotate: ",next_player(u)); // Do not edit this line
-//You may put code here
+    int col;
+    int row;
+    printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
+    scanf("%d", &col);
+    printf("Player %c enter row to rotate: ",next_player(u)); // Do not edit this line
+    scanf("%d", &row);
+    struct move new_move = {col, row};
+    return new_move;
 }
 
 int is_valid_move(struct move m, board u){
