@@ -11,7 +11,7 @@ int main(){
   write_out_file(stdout,my_board);
    
   while(current_winner(my_board)=='.') {
-    struct move next_move = read_in_move();
+    struct move next_move = read_in_move(my_board);
     if (is_valid_move(next_move,my_board)) {
     play_move(next_move,my_board);
     write_out_file(stdout,my_board);
