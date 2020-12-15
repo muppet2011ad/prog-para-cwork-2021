@@ -77,7 +77,12 @@ struct move read_in_move(board u){
 }
 
 int is_valid_move(struct move m, board u){
-//You may put code here
+    int real_col = m.column - 1;
+    int real_row = abs(m.row) - 1; // Convert the move data to indices 
+    if (real_row >= u->height) { return 0; }
+    if (real_col >= u->width || real_col < 0) { return 0; }
+    if (u->grid[0][real_col] != '.') { return 0; }
+    return 1;
 }
 
 char is_winning_move(struct move m, board u){
