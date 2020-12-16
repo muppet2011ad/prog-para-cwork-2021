@@ -292,13 +292,18 @@ board copy_board(board u) {
     return v;
 }
 
-void validate_pointer(void *ptr, int errtype) {
+void validate_pointer(void *ptr, int errtype) { // Checks if pointer is null, calls error(errtype) if it is
     if (ptr == NULL) { error(errtype); }
     else { return; }
 }
 
 void error(int type) {
-    const char *messages[] = { "Failed to allocate memory for a board.", "Failed to allocate memory when reading in string.", "Move is not valid.", "File pointer is null.", "Invalid input."  };
+    const char *messages[] = {  "Failed to allocate memory for a board.", 
+                                "Failed to allocate memory when reading in string.", 
+                                "Move is not valid.", 
+                                "File pointer is null.", 
+                                "Invalid input."  
+                            };
     fprintf(stderr, "Error: %s\n", messages[type]);
     exit(type+1);
 }
