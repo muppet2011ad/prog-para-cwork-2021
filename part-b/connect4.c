@@ -31,10 +31,7 @@ struct board_structure {
 
 board setup_board(){
     board new_board = calloc (1, sizeof(struct board_structure)); // Alloc memory and zero all bytes (makes it easy to distinguish between a board populated with data and one that isn't)
-    if (new_board == NULL) {
-        fprintf(stderr, "Error: failed to allocate memory when setting up board.");
-        exit(1);
-    }
+    validate_pointer(new_board, 0);
     return new_board;
 }
 
@@ -114,6 +111,7 @@ char is_winning_move(struct move m, board u){
 }
 
 void play_move(struct move m, board u){
+    if (!is_valid_move(m, u)) { error(2); }
     char token = next_player(u); // Gets the token that will be played
     u->grid[0][m.column-1] = token; // Place it in the top row
     resolve_gravity_single(u, 0, m.column-1); // Apply gravity to let it fall
@@ -204,11 +202,9 @@ int real_modulo(int a, int b) {
 }
 
 char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d with a few alterations since the functionality is very similar
+    validate_pointer(src, 3);
     char **lines = calloc(5, sizeof(char*));
-    if (lines == NULL) {
-        fprintf(stderr, "Error: failed to allocate memory when reading in string!");
-        exit(1);
-    }
+    validate_pointer(lines, 1);
     int lines_arr_size = 5;
     char input_buffer[514]; // Create buffer to receive input - 514 as it allows 512 chars + \n + \0
     while (!feof(src)) { // Until we reach EOF
@@ -218,18 +214,12 @@ char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d 
         }
         int line_length = strlen(input_buffer); // Get the length of the string
         char *new_line = malloc(line_length); // Allocate just enough memory for it
-        if (new_line == NULL) { // If memory allocation fails
-            fprintf(stderr, "Error: failed to allocate memory when reading in string!");
-            exit(1); // Complain and exit
-        }
+        validate_pointer(new_line, 1);
         strncpy(new_line, input_buffer, line_length); // Copy from input buffer to the newly allocated memory
         new_line[line_length-1] = '\0';
         if (*num_lines >= lines_arr_size) { // If we need to expand the array
             lines = realloc(lines, (lines_arr_size+5)*sizeof(char*)); // Expand it
-            if (lines == NULL) { // Complain and exit if realloc fails
-                fprintf(stderr, "Error: failed to allocate memory when reading in string!");
-                exit(1);
-            }
+            validate_pointer(lines, 1);
             lines_arr_size += 5; // Update with new array size
         }
         lines[*num_lines] = new_line; // Add the new line to the array
@@ -243,6 +233,17 @@ void display_board(board u) {
         printf("%s\n", u->grid[i]);
     }
     printf("\n");
+}
+
+void validate_pointer(void *ptr, int errtype) {
+    if (ptr == NULL) { error(errtype); }
+    else { return; }
+}
+
+void error(int type) {
+    const char *messages[] = { "Failed to allocate memory for a board.", "Failed to allocate memory when reading in string.", "Move is not valid.", "File pointer is null."  };
+    fprintf(stderr, "Error: %s\n", messages[type]);
+    exit(type+1);
 }
 
 int main () {
