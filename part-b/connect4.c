@@ -160,7 +160,7 @@ win find_win(board u, char player) {
     for (int i = 0; i < u->height; i++) {
         for (int j = 0; j < u->width; j++) {
             char token = u->grid[i][j];
-            if (token == player && u->grid[i][real_modulo(j+1, u->width)] == token && u->grid[i][real_modulo(j+2, u->width)] == token && u->grid[i][real_modulo(j+3, u->width)]) {
+            if (token == player && u->grid[i][real_modulo(j+1, u->width)] == token && u->grid[i][real_modulo(j+2, u->width)] == token && u->grid[i][real_modulo(j+3, u->width)] == token) {
                 return (win) {i, j, 0, 1};
             }
         }
