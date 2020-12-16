@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include"connect4.h"
 
 typedef struct win_structure {
@@ -20,6 +21,7 @@ int get_real_row(board u, int original_row);
 win find_win(board u, char player);
 int real_modulo(int a, int b);
 board copy_board(board u);
+void capitalise_win(board u, win w);
 void validate_pointer(void *ptr, int errtype);
 void error(int type);
 
@@ -61,7 +63,16 @@ void read_in_file(FILE *infile, board u){
 }
 
 void write_out_file(FILE *outfile, board u){
-//You may put code here
+    validate_pointer(outfile, 3);
+    board display = copy_board(u); // We copy the board so we can make display changes (i.e. capitalise winning runs) without ruining the original board
+    win highlight_win = find_win(display, 'x');
+    if (highlight_win.is_win) { capitalise_win(display, highlight_win); }
+    highlight_win = find_win(display, 'o');
+    if (highlight_win.is_win) { capitalise_win(display, highlight_win); } // Check for wins on both players (uses same variable to save memory)
+    for (int i = 0; i < display->height; i++) {
+        fprintf(outfile, "%s\n", display->grid[i]);
+    }
+    fprintf(outfile, "\n");
 }
 
 char next_player(board u){
@@ -174,6 +185,33 @@ win find_win(board u, char player) {
     }
     // If we get here, we didn't find a win for the player
     return (win) {0, 0, 0, 0};
+}
+
+void capitalise_win(board u, win w) {
+    char token = toupper(u->grid[w.real_row_start][w.real_col_start]);
+    u->grid[w.real_row_start][w.real_col_start] = token;
+    switch (w.direction) {
+        case 0: // Horizontal
+            u->grid[w.real_row_start][real_modulo(w.real_col_start+1, u->width)] = token;
+            u->grid[w.real_row_start][real_modulo(w.real_col_start+2, u->width)] = token;
+            u->grid[w.real_row_start][real_modulo(w.real_col_start+3, u->width)] = token;
+            break;
+        case 1: // Diagonal y = x
+            u->grid[w.real_row_start+1][real_modulo(w.real_col_start-1, u->width)] = token;
+            u->grid[w.real_row_start+2][real_modulo(w.real_col_start-2, u->width)] = token;
+            u->grid[w.real_row_start+3][real_modulo(w.real_col_start-3, u->width)] = token;
+            break;
+        case 2: // Vertical
+            u->grid[w.real_row_start+1][w.real_col_start] = token;
+            u->grid[w.real_row_start+2][w.real_col_start] = token;
+            u->grid[w.real_row_start+3][w.real_col_start] = token;
+            break;
+        case 3: // Diagonal y = -x
+            u->grid[w.real_row_start+1][real_modulo(w.real_col_start+1, u->width)] = token;
+            u->grid[w.real_row_start+2][real_modulo(w.real_col_start+2, u->width)] = token;
+            u->grid[w.real_row_start+3][real_modulo(w.real_col_start+3, u->width)] = token;
+            break;
+    }
 }
 
 int get_real_row(board u, int original_row) { // Converts the user-friendly row numbering (+/-1 is bottom row, +/-n is top) to my row numbering (0 is top row, n-1 is bottom row)
