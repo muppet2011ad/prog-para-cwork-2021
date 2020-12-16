@@ -90,9 +90,9 @@ struct move read_in_move(board u){
     int col;
     int row;
     printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
-    scanf("%d", &col);
+    if (scanf("%d", &col) != 1) { error(4); }
     printf("Player %c enter row to rotate: ",next_player(u)); // Do not edit this line
-    scanf("%d", &row);
+    if (scanf("%d", &row) != 1) { error(4); }
     struct move new_move = {col, row};
     return new_move;
 }
@@ -260,7 +260,7 @@ void validate_pointer(void *ptr, int errtype) {
 }
 
 void error(int type) {
-    const char *messages[] = { "Failed to allocate memory for a board.", "Failed to allocate memory when reading in string.", "Move is not valid.", "File pointer is null."  };
+    const char *messages[] = { "Failed to allocate memory for a board.", "Failed to allocate memory when reading in string.", "Move is not valid.", "File pointer is null.", "Invalid input."  };
     fprintf(stderr, "Error: %s\n", messages[type]);
     exit(type+1);
 }
@@ -270,11 +270,11 @@ int main () {
     FILE *testfile = fopen("test_input1.txt", "r");
     read_in_file(testfile, new_board);
     fclose(testfile);
-    //struct move test = read_in_move(new_board);
+    struct move test = read_in_move(new_board);
     //struct move test = {3, -4};
     //int valid = is_valid_move(test, new_board);
-    //play_move(test, new_board);
-    printf("%c\n", current_winner(new_board));
+    play_move(test, new_board);
+    //printf("%c\n", current_winner(new_board));
     display_board(new_board);
     cleanup_board(new_board);
     return 0;
