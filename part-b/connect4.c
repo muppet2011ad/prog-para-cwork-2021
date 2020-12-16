@@ -9,8 +9,9 @@
 typedef struct win_structure {
     int real_row_start;
     unsigned int real_col_start : 9; // Max 512 columns so will never need more than 512 indices
-    unsigned int direction: 2; // 0: horizontal, 1: diagonal y = x, 2: vertical, 3: diagonal y = -x
-} *win;
+    unsigned int direction : 2; // 0: horizontal, 1: diagonal y = x, 2: vertical, 3: diagonal y = -x
+    unsigned int is_win : 1;
+} win;
 
 char **read_lines (FILE* src, int *num_lines);
 void resolve_gravity_single(board u, int real_row, int real_col);
@@ -18,6 +19,9 @@ void resolve_gravity_above(board u, int real_row, int real_col);
 int get_real_row(board u, int original_row);
 win find_win(board u, char player);
 int real_modulo(int a, int b);
+board copy_board(board u);
+void validate_pointer(void *ptr, int errtype);
+void error(int type);
 
 struct board_structure {
     char **grid; // Array of strings to store board data
@@ -79,19 +83,9 @@ char next_player(board u){
 char current_winner(board u){
     win x_win = find_win(u, 'x');
     win o_win = find_win(u, 'o');
-    if (x_win && o_win) {
-        free(x_win);
-        free(o_win);
-        return 'd';
-    }
-    else if (x_win) {
-        free(x_win); 
-        return 'x';
-    }
-    else if (o_win) { 
-        free(o_win);
-        return 'o';
-    }
+    if (x_win.is_win && o_win.is_win) { return 'd'; }
+    else if (x_win.is_win) { return 'x'; }
+    else if (o_win.is_win) { return 'o'; }
     else { return '.'; }
 }
 
@@ -153,11 +147,7 @@ win find_win(board u, char player) {
         for (int j = 0; j < u->width; j++) {
             char token = u->grid[i][j];
             if (token == player && u->grid[i][real_modulo(j+1, u->width)] == token && u->grid[i][real_modulo(j+2, u->width)] == token && u->grid[i][real_modulo(j+3, u->width)]) {
-                win new_win = malloc(sizeof(win));
-                new_win->real_row_start = i;
-                new_win->real_col_start = j;
-                new_win->direction = 0;
-                return new_win;
+                return (win) {i, j, 0, 1};
             }
         }
     }
@@ -167,32 +157,20 @@ win find_win(board u, char player) {
             char token = u->grid[i][j];
             // Check vertical
             if (token == player && u->grid[i+1][j] == token && u->grid[i+2][j] == token && u->grid[i+3][j] == token) {
-                win new_win = malloc(sizeof(win));
-                new_win->real_row_start = i;
-                new_win->real_col_start = j;
-                new_win->direction = 2;
-                return new_win;
+                return (win) {i, j, 2, 1};
             }
             // Check diagonal y = -x
             if (token == player && u->grid[i+1][real_modulo(j+1, u->width)] == token && u->grid[i+2][real_modulo(j+2, u->width)] == token && u->grid[i+3][real_modulo(j+3, u->width)] == token) {
-                win new_win = malloc(sizeof(win));
-                new_win->real_row_start = i;
-                new_win->real_col_start = j;
-                new_win->direction = 3;
-                return new_win;
+                return (win) {i, j, 3, 1};
             }
             // Check diagonal y = x
             if (token == player && u->grid[i+1][real_modulo(j-1, u->width)] == token && u->grid[i+2][real_modulo(j-2, u->width)] == token && u->grid[i+3][real_modulo(j-3, u->width)] == token) {
-                win new_win = malloc(sizeof(win));
-                new_win->real_row_start = i;
-                new_win->real_col_start = j;
-                new_win->direction = 1;
-                return new_win;
+                return (win) {i, j, 1, 1};
             }
         }
     }
     // If we get here, we didn't find a win for the player
-    return NULL;
+    return (win) {0, 0, 0, 0};
 }
 
 int get_real_row(board u, int original_row) { // Converts the user-friendly row numbering (+/-1 is bottom row, +/-n is top) to my row numbering (0 is top row, n-1 is bottom row)
