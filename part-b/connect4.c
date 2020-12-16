@@ -107,7 +107,12 @@ int is_valid_move(struct move m, board u){
 }
 
 char is_winning_move(struct move m, board u){
-//You may put code here
+    if (!is_valid_move(m, u)) { error(2); }
+    board test_board = copy_board(u); // Create a board for testing the move so we don't accidentally ruin the game board
+    play_move(m, test_board); // Play the move on the test board
+    char winner = current_winner(test_board);
+    cleanup_board(test_board);
+    return winner;
 }
 
 void play_move(struct move m, board u){
@@ -233,6 +238,20 @@ void display_board(board u) {
         printf("%s\n", u->grid[i]);
     }
     printf("\n");
+}
+
+board copy_board(board u) {
+    board v = setup_board();
+    v->width = u->width;
+    v->height = u->height;
+    v->grid = malloc(sizeof(char*)*v->height);
+    validate_pointer(v->grid, 0);
+    for (int i = 0; i < v->height; i++) {
+        v->grid[i] = malloc(sizeof(char)*v->width);
+        validate_pointer(v->grid[i], 0);
+        strcpy(v->grid[i], u->grid[i]);
+    }
+    return v;
 }
 
 void validate_pointer(void *ptr, int errtype) {
