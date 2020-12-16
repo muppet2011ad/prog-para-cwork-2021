@@ -97,21 +97,21 @@ char is_winning_move(struct move m, board u){
 }
 
 void play_move(struct move m, board u){
-    char token = next_player(u);
-    u->grid[0][m.column-1] = token;
-    resolve_gravity_single(u, 0, m.column-1);
-    if (m.row == 0) { return; }
-    int real_row = get_real_row(u, m.row);
-    if (m.row > 1) {
-        char last = u->grid[real_row][u->width-1];
-        for (int i = 0; i < u->width; i++) {
+    char token = next_player(u); // Gets the token that will be played
+    u->grid[0][m.column-1] = token; // Place it in the top row
+    resolve_gravity_single(u, 0, m.column-1); // Apply gravity to let it fall
+    if (m.row == 0) { return; } // If m.row was zero then there is no need to rotate
+    int real_row = get_real_row(u, m.row); // Otherwise get the array index for the move's row
+    if (m.row > 0) { // If rotating to the right
+        char last = u->grid[real_row][u->width-1]; // Rightmost column becomes leftmost so start by copying that
+        for (int i = 0; i < u->width; i++) { // Iterate across the row left to right
             char tmp = u->grid[real_row][i];
             u->grid[real_row][i] = last;
-            last = tmp;
-            resolve_gravity_above(u, real_row, i);          
+            last = tmp; // Swap the item in last with the ith column
+            resolve_gravity_above(u, real_row, i); // Apply gravity on the column
         }
     }
-    else {
+    else { // If rotating to the right, the process is the same but right-to-left
         char last = u->grid[real_row][0];
         for (int i = u->width-1; i >= 0; i--) {
             char tmp = u->grid[real_row][i];
