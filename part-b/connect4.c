@@ -308,17 +308,17 @@ void error(int type) {
     exit(type+1);
 }
 
-int main () {
-    board new_board = setup_board();
-    FILE *testfile = fopen("test_input1.txt", "r");
-    read_in_file(testfile, new_board);
-    fclose(testfile);
-    struct move test = read_in_move(new_board);
-    //struct move test = {3, -4};
-    //int valid = is_valid_move(test, new_board);
-    play_move(test, new_board);
-    //printf("%c\n", current_winner(new_board));
-    display_board(new_board);
-    cleanup_board(new_board);
-    return 0;
-}
+// int main () {
+//     board new_board = setup_board();
+//     FILE *testfile = fopen("test_input1.txt", "r");
+//     read_in_file(testfile, new_board);
+//     fclose(testfile);
+//     //struct move test = read_in_move(new_board);
+//     //struct move test = {3, -4};
+//     //int valid = is_valid_move(test, new_board);
+//     //play_move(test, new_board);
+//     //printf("%c\n", current_winner(new_board));
+//     write_out_file(stdout, new_board);
+//     cleanup_board(new_board);
+//     return 0;
+// }
