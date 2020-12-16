@@ -7,6 +7,9 @@
 #include"connect4.h"
 
 char **read_lines (FILE* src, int *num_lines);
+void resolve_gravity_single(board u, int real_row, int real_col);
+void resolve_gravity_above(board u, int real_row, int real_col);
+int get_real_row(board u, int original_row);
 
 struct board_structure {
     char **grid; // Array of strings to store board data
@@ -82,7 +85,7 @@ struct move read_in_move(board u){
 
 int is_valid_move(struct move m, board u){
     int real_col = m.column - 1;
-    int real_row = abs(m.row) - 1; // Convert the move data to indices 
+    int real_row = get_real_row(u, m.row); // Convert the move data to indices 
     if (real_row >= u->height) { return 0; } // Check bound on row. No need to check if below zero since -1 indicates no rotation (as m.row was 0)
     if (real_col >= u->width || real_col < 0) { return 0; } // Check bounds on column. Must be between 0 and the max index, which is width-1
     if (u->grid[0][real_col] != '.') { return 0; } // Check that there's actually room to place the new token at the top of the grid
@@ -94,11 +97,53 @@ char is_winning_move(struct move m, board u){
 }
 
 void play_move(struct move m, board u){
-//You may put code here
+    char token = next_player(u);
+    u->grid[0][m.column-1] = token;
+    resolve_gravity_single(u, 0, m.column-1);
+    if (m.row == 0) { return; }
+    int real_row = get_real_row(u, m.row);
+    if (m.row > 1) {
+        char last = u->grid[real_row][u->width-1];
+        for (int i = 0; i < u->width; i++) {
+            char tmp = u->grid[real_row][i];
+            u->grid[real_row][i] = last;
+            last = tmp;
+            resolve_gravity_above(u, real_row, i);          
+        }
+    }
+    else {
+        char last = u->grid[real_row][0];
+        for (int i = u->width-1; i >= 0; i--) {
+            char tmp = u->grid[real_row][i];
+            u->grid[real_row][i] = last;
+            last = tmp;
+            resolve_gravity_above(u, real_row, i);
+        } 
+    }
 }
 
 //You may put additional functions here if you wish.
 
+int get_real_row(board u, int original_row) { // Converts the user-friendly row numbering (+/-1 is bottom row, +/-n is top) to my row numbering (0 is top row, n-1 is bottom row)
+    return u->height - abs(original_row);
+}
+
+void resolve_gravity_single(board u, int real_row, int real_col) { // Applies the effects of gravity to a SINGLE token
+    if (real_row == u->height-1) { return; } // If we're at the bottom row, no problem
+    if (u->grid[real_row+1][real_col] != '.') { return; } // If the space below us is occupied, also no problem
+    int new_row = real_row;
+    while (!(new_row == u->height-1) && !(u->grid[new_row+1][real_col] != '.')) { new_row++; } // Count through rows until one of the "no problem" conditions is met
+    u->grid[new_row][real_col] = u->grid[real_row][real_col]; // Copy the token into its new position
+    u->grid[real_row][real_col] = '.'; // Leave an empty space where it used to be
+}
+
+void resolve_gravity_above(board u, int real_row, int real_col) {
+    for (int i = real_row; i >= 0; i--) {
+        if (u->grid[i][real_col] != '.') {
+            resolve_gravity_single(u, i, real_col);
+        }
+    }
+}
 
 char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d with a few alterations since the functionality is very similar
     char **lines = calloc(5, sizeof(char*));
@@ -135,10 +180,23 @@ char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d 
     return lines; // Return a pointer to the array
 }
 
+void display_board(board u) {
+    for (int i = 0; i < u->height; i++) {
+        printf("%s\n", u->grid[i]);
+    }
+    printf("\n");
+}
+
 int main () {
     board new_board = setup_board();
     FILE *testfile = fopen("test_input1.txt", "r");
     read_in_file(testfile, new_board);
     fclose(testfile);
+    //struct move test = read_in_move(new_board);
+    struct move test = {3, -4};
+    //int valid = is_valid_move(test, new_board);
+    play_move(test, new_board);
+    display_board(new_board);
+    cleanup_board(new_board);
     return 0;
 }
