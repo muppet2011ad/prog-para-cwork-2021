@@ -76,8 +76,8 @@ void write_out_file(FILE *outfile, board u){
 }
 
 char next_player(board u){
-    int num_x;
-    int num_o; // Create counters for each player
+    int num_x = 0;
+    int num_o = 0; // Create counters for each player
     for (int i = 0; i < u->height; i++) {
         for (int j = 0; j < u->width; j++) {
             if (u->grid[i][j] == 'o') { num_o++; }
@@ -313,11 +313,12 @@ void error(int type) {
 //     FILE *testfile = fopen("test_input1.txt", "r");
 //     read_in_file(testfile, new_board);
 //     fclose(testfile);
-//     //struct move test = read_in_move(new_board);
-//     //struct move test = {3, -4};
-//     //int valid = is_valid_move(test, new_board);
-//     //play_move(test, new_board);
-//     //printf("%c\n", current_winner(new_board));
+//     write_out_file(stdout, new_board);
+//     struct move test = {3, 4};
+//     play_move(test, new_board);
+//     write_out_file(stdout, new_board);
+//     test = (struct move) {2, 2};
+//     play_move(test, new_board);
 //     write_out_file(stdout, new_board);
 //     cleanup_board(new_board);
 //     return 0;
