@@ -115,9 +115,9 @@ struct move read_in_move(board u){
 }
 
 int is_valid_move(struct move m, board u){
-    int real_col = m.column - 1;
+    short real_col = m.column - 1;
     int real_row = get_real_row(u, m.row); // Convert the move data to indices 
-    if (real_row >= u->height && m.row != 0) { return 0; } // Check bound on row. No need to check if below zero since -1 indicates no rotation (as m.row was 0)
+    if ((real_row < 0 || real_row >= u->height) && m.row != 0) { return 0; } // Check bound on row. No need to check if below zero since -1 indicates no rotation (as m.row was 0)
     if (real_col >= u->width || real_col < 0) { return 0; } // Check bounds on column. Must be between 0 and the max index, which is width-1
     if (u->grid[0][real_col] != '.') { return 0; } // Check that there's actually room to place the new token at the top of the grid
     return 1; // If it passes all these tests, it's a winning move so return 1
