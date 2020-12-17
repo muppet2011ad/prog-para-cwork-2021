@@ -24,7 +24,6 @@ int get_real_row(board u, int original_row);
 win find_win(board u, char player);
 int real_modulo(int a, int b);
 board copy_board(board u);
-void capitalise_win(char **display, win w, int width);
 void get_win_run(win w, int *run, int width);
 void validate_pointer(void *ptr, int errtype);
 void error(int type);
@@ -208,34 +207,6 @@ win find_win(board u, char player) {
     }
     // If we get here, we didn't find a win for the player
     return (win) {0, 0, 0, 0};
-}
-
-void capitalise_win(char **display, win w, int width) {
-    if (!w.is_win) { return; } // If the win isn't really a win, just don't do anything
-    char token = toupper(display[w.real_row_start][w.real_col_start]);
-    display[w.real_row_start][w.real_col_start] = token;
-    switch (w.direction) {
-        case 0: // Horizontal
-            display[w.real_row_start][real_modulo(w.real_col_start+1, width)] = token;
-            display[w.real_row_start][real_modulo(w.real_col_start+2, width)] = token;
-            display[w.real_row_start][real_modulo(w.real_col_start+3, width)] = token;
-            break;
-        case 1: // Diagonal y = x
-            display[w.real_row_start+1][real_modulo(w.real_col_start-1, width)] = token;
-            display[w.real_row_start+2][real_modulo(w.real_col_start-2, width)] = token;
-            display[w.real_row_start+3][real_modulo(w.real_col_start-3, width)] = token;
-            break;
-        case 2: // Vertical
-            display[w.real_row_start+1][w.real_col_start] = token;
-            display[w.real_row_start+2][w.real_col_start] = token;
-            display[w.real_row_start+3][w.real_col_start] = token;
-            break;
-        case 3: // Diagonal y = -x
-            display[w.real_row_start+1][real_modulo(w.real_col_start+1, width)] = token;
-            display[w.real_row_start+2][real_modulo(w.real_col_start+2, width)] = token;
-            display[w.real_row_start+3][real_modulo(w.real_col_start+3, width)] = token;
-            break;
-    }
 }
 
 void get_win_run(win w, int *run, int width) {
