@@ -73,6 +73,7 @@ void write_out_file(FILE *outfile, board u){
         fprintf(outfile, "%s\n", display->grid[i]);
     }
     fprintf(outfile, "\n");
+    cleanup_board(display);
 }
 
 char next_player(board u){
@@ -98,8 +99,7 @@ char current_winner(board u){
 }
 
 struct move read_in_move(board u){
-    int col;
-    int row;
+    int col, row;
     printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
     if (scanf("%d", &col) != 1) { error(4); }
     printf("Player %c enter row to rotate: ",next_player(u)); // Do not edit this line
@@ -228,14 +228,14 @@ void resolve_gravity_single(board u, int real_row, int real_col) { // Applies th
 }
 
 void resolve_gravity_above(board u, int real_row, int real_col) {
-    for (int i = real_row; i >= 0; i--) {
+    for (int i = real_row; i >= 0; i--) { // A token falling can only affect spaces directly above it, so iterate through those
         if (u->grid[i][real_col] != '.') {
-            resolve_gravity_single(u, i, real_col);
+            resolve_gravity_single(u, i, real_col); // And apply gravity if they contain a token
         }
     }
 }
 
-int real_modulo(int a, int b) {
+int real_modulo(int a, int b) { // C's modulo operator returns -ve values with -ve inputs, which I don't want since these aren't valid array indices. This function bounds the result to [0, b)
     if (a >= 0) {
         return a % b;
     }
@@ -271,13 +271,6 @@ char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d 
     return lines; // Return a pointer to the array
 }
 
-void display_board(board u) {
-    for (int i = 0; i < u->height; i++) {
-        printf("%s\n", u->grid[i]);
-    }
-    printf("\n");
-}
-
 board copy_board(board u) {
     board v = setup_board();
     v->width = u->width;
@@ -285,7 +278,7 @@ board copy_board(board u) {
     v->grid = malloc(sizeof(char*)*v->height);
     validate_pointer(v->grid, 0);
     for (int i = 0; i < v->height; i++) {
-        v->grid[i] = malloc(sizeof(char)*v->width);
+        v->grid[i] = malloc((sizeof(char)*v->width)+1); // +1 to allow for \0 (forgot this originally so valgrind was complaining)
         validate_pointer(v->grid[i], 0);
         strcpy(v->grid[i], u->grid[i]);
     }
