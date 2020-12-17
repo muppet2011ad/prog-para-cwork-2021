@@ -15,8 +15,8 @@ typedef struct win_structure {
 } win;
 
 char **read_lines (FILE* src, int *num_lines);
-void resolve_gravity_single(board u, int real_row, int real_col);
-void resolve_gravity_above(board u, int real_row, int real_col);
+void resolve_gravity_single(board u, int real_row, short real_col);
+void resolve_gravity_above(board u, int real_row, short real_col);
 int get_real_row(board u, int original_row);
 win find_win(board u, char player);
 int real_modulo(int a, int b);
@@ -28,7 +28,7 @@ void error(int type);
 struct board_structure {
     char **grid; // Array of strings to store board data
     int width;
-    int height; // Stores bounds of board
+    short height; // Stores bounds of board
 };
 
 board setup_board(){
@@ -105,7 +105,8 @@ char current_winner(board u){
 }
 
 struct move read_in_move(board u){
-    int col, row;
+    short col;
+    int row;
     printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
     if (scanf("%d", &col) != 1) { error(4); }
     printf("Player %c enter row to rotate: ",next_player(u)); // Do not edit this line
@@ -224,7 +225,7 @@ int get_real_row(board u, int original_row) { // Converts the user-friendly row 
     return u->height - abs(original_row);
 }
 
-void resolve_gravity_single(board u, int real_row, int real_col) { // Applies the effects of gravity to a SINGLE token
+void resolve_gravity_single(board u, int real_row, short real_col) { // Applies the effects of gravity to a SINGLE token
     if (real_row == u->height-1) { return; } // If we're at the bottom row, no problem
     if (u->grid[real_row+1][real_col] != '.') { return; } // If the space below us is occupied, also no problem
     int new_row = real_row;
@@ -233,7 +234,7 @@ void resolve_gravity_single(board u, int real_row, int real_col) { // Applies th
     u->grid[real_row][real_col] = '.'; // Leave an empty space where it used to be
 }
 
-void resolve_gravity_above(board u, int real_row, int real_col) {
+void resolve_gravity_above(board u, int real_row, short real_col) {
     for (int i = real_row; i >= 0; i--) { // A token falling can only affect spaces directly above it, so iterate through those
         if (u->grid[i][real_col] != '.') {
             resolve_gravity_single(u, i, real_col); // And apply gravity if they contain a token
