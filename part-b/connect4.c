@@ -66,7 +66,6 @@ void read_in_file(FILE *infile, board u){
 }
 
 void write_out_file(FILE *outfile, board u){
-    win test = {23423, 511, 1, 1};
     validate_pointer(outfile, 3);
     validate_pointer(u, 6);
     win x_win = find_win(u, 'x');
