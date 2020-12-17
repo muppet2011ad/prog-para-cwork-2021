@@ -64,16 +64,22 @@ void read_in_file(FILE *infile, board u){
 
 void write_out_file(FILE *outfile, board u){
     validate_pointer(outfile, 3);
-    board display = copy_board(u); // We copy the board so we can make display changes (i.e. capitalise winning runs) without ruining the original board
-    win highlight_win = find_win(display, 'x');
-    if (highlight_win.is_win) { capitalise_win(display, highlight_win); }
-    highlight_win = find_win(display, 'o');
-    if (highlight_win.is_win) { capitalise_win(display, highlight_win); } // Check for wins on both players (uses same variable to save memory)
+    win x_win = find_win(u, 'x');
+    win o_win = find_win(u, 'o');
+    board display;
+    if (x_win.is_win || o_win.is_win) {
+        display = copy_board(u); // We copy the board so we can make display changes (i.e. capitalise winning runs) without ruining the original board
+        if (x_win.is_win) { capitalise_win(display, x_win); }
+        if (o_win.is_win) { capitalise_win(display, o_win); }
+    }
+    else {
+        display = u;
+    }
     for (int i = 0; i < display->height; i++) {
         fprintf(outfile, "%s\n", display->grid[i]);
     }
     fprintf(outfile, "\n");
-    cleanup_board(display);
+    if (display != u) { cleanup_board(display); }
 }
 
 char next_player(board u){
@@ -111,7 +117,7 @@ struct move read_in_move(board u){
 int is_valid_move(struct move m, board u){
     int real_col = m.column - 1;
     int real_row = get_real_row(u, m.row); // Convert the move data to indices 
-    if (real_row >= u->height) { return 0; } // Check bound on row. No need to check if below zero since -1 indicates no rotation (as m.row was 0)
+    if (real_row >= u->height && m.row != 0) { return 0; } // Check bound on row. No need to check if below zero since -1 indicates no rotation (as m.row was 0)
     if (real_col >= u->width || real_col < 0) { return 0; } // Check bounds on column. Must be between 0 and the max index, which is width-1
     if (u->grid[0][real_col] != '.') { return 0; } // Check that there's actually room to place the new token at the top of the grid
     return 1; // If it passes all these tests, it's a winning move so return 1
@@ -307,7 +313,7 @@ void error(int type) {
 //     read_in_file(testfile, new_board);
 //     fclose(testfile);
 //     write_out_file(stdout, new_board);
-//     struct move test = {3, 4};
+//     struct move test = {4, 0};
 //     play_move(test, new_board);
 //     write_out_file(stdout, new_board);
 //     test = (struct move) {2, 2};

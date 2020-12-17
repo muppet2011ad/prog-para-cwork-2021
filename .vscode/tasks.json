@@ -20,6 +20,28 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "C/C++: gcc build part-b main",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-g",
+                "${workspaceFolder}/part-b/main.c",
+                "${workspaceFolder}/part-b/connect4.c",
+                "-o",
+                "${workspaceFolder}/part-b/main"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/part-b"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ],
     "version": "2.0.0"
