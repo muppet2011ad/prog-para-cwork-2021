@@ -51,6 +51,7 @@ void cleanup_board(board u){
 }
 
 void read_in_file(FILE *infile, board u){
+    validate_pointer(infile, 3);
     validate_pointer(u, 6);
     int rows = 0;
     char **lines = read_lines(infile, &rows); // Read in the lines from the file given
@@ -58,6 +59,7 @@ void read_in_file(FILE *infile, board u){
     u->width = strlen(lines[0]); // Work out the bounds of the board
     int members = u->height*u->width;
     u->grid = calloc((members/TOKENS_IN_INT) + (members%TOKENS_IN_INT != 0), sizeof(int));
+    validate_pointer(u->grid, 0);
     for (int i = 0; i < u->height; i++) {
         if (strlen(lines[i]) != strlen(lines[0])) { error(5); }
         for (int j = 0; j < u->width; j++) { // Correct any capitals to lowercase and remove any invalid characters
