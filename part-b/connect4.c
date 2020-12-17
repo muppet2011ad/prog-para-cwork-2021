@@ -72,23 +72,23 @@ void read_in_file(FILE *infile, board u){
 
 void write_out_file(FILE *outfile, board u){
     validate_pointer(outfile, 3);
-    validate_pointer(u, 6);
-    win x_win = find_win(u, 'x');
-    int x_win_run[8];
-    get_win_run(x_win, x_win_run, u->width);
+    validate_pointer(u, 6); // Validates both pointers passed
+    win x_win = find_win(u, 'x'); // Attempt to find a win by x
+    int x_win_run[8]; // Prepare an array to store the winning locations
+    get_win_run(x_win, x_win_run, u->width); // Work out the run if it exists
     win o_win = find_win(u, 'o');
     int o_win_run[8];
-    get_win_run(o_win, o_win_run, u->width);
+    get_win_run(o_win, o_win_run, u->width); // Same for o
     for (int i = 0; i < u->height; i++) {
-        for (int j = 0; j < u->width; j++) {
-            char token = get_val(u, i, j);
+        for (int j = 0; j < u->width; j++) { // Iterate through the grid
+            char token = get_val(u, i, j); // Get the token at location i,j
             if (token == 'x' && (x_win.is_win && IN_RUN(x_win_run, i, j))) { token = 'X'; }
-            else if (token == 'o' && (o_win.is_win && IN_RUN(o_win_run, i, j))) { token = 'O'; }
-            fprintf(outfile, "%c", token);
+            else if (token == 'o' && (o_win.is_win && IN_RUN(o_win_run, i, j))) { token = 'O'; } // Check if the token is part of a win - if it is, capitalise it
+            fprintf(outfile, "%c", token); // Output the token
         }
-        fprintf(outfile, "\n");
+        fprintf(outfile, "\n"); // Add a newline to split up lines
     }
-    fprintf(outfile, "\n");
+    fprintf(outfile, "\n"); // Finish with a final newline
 }
 
 char next_player(board u){
@@ -317,8 +317,7 @@ char get_val(board u, int row, int col) {
     int index = ((row*u->width) + col)/TOKENS_IN_INT; // Calculates the index of the integer we need to fetch in the grid
     int bit_index = ((row*u->width) + col)%TOKENS_IN_INT; // Calculates the index of the bit pair within that int we need
     unsigned int stored_bytes = u->grid[index]; // Grabs the int from the grid array
-    //unsigned int stored_bytes = 403179528;
-    stored_bytes = stored_bytes >> (((TOKENS_IN_INT-bit_index)*2)-2); // Bit-shfts it until the bit pair we want occupies the least significant bits
+    stored_bytes = stored_bytes >> (((TOKENS_IN_INT-bit_index)*2)-2); // Bit-shifts it until the bit pair we want occupies the least significant bits
     int val = 3 & stored_bytes; // Copy these two bits into val
     if (val == 1) { return 'o'; }
     else if (val == 2) { return 'x'; } // Return a different char depending on this value
@@ -351,8 +350,7 @@ void error(int type) {
                                 "Could not open file for reading/writing.", // 3
                                 "Invalid input - make sure you input an integer.", // 4
                                 "Board has inconsistent number of columns.", // 5
-                                "Board does not exist.", // 6
-                                "Failed to allocate memory when preparing board for output." // 7
+                                "Board does not exist." // 6
                             };
     fprintf(stderr, "Error: %s\n", messages[type]);
     exit(1);
