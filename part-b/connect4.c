@@ -27,8 +27,8 @@ board copy_board(board u);
 void get_win_run(win w, int *run, int width);
 void validate_pointer(void *ptr, int errtype);
 void error(int type);
-char getVal(board u, int row, int col);
-void setVal(board u, int row, int col, char token);
+char get_val(board u, int row, int col);
+void set_val(board u, int row, int col, char token);
 
 struct board_structure {
     unsigned int *grid; // Array of strings to store board data
@@ -61,8 +61,8 @@ void read_in_file(FILE *infile, board u){
     for (int i = 0; i < u->height; i++) {
         if (strlen(lines[i]) != strlen(lines[0])) { error(5); }
         for (int j = 0; j < u->width; j++) { // Correct any capitals to lowercase and remove any invalid characters
-            if (lines[i][j] == 'x' || lines[i][j] == 'X') { setVal(u, i, j, 'x'); }
-            else if (lines[i][j] == 'o' || lines[i][j] == 'O') { setVal(u, i, j, 'o'); }
+            if (lines[i][j] == 'x' || lines[i][j] == 'X') { set_val(u, i, j, 'x'); }
+            else if (lines[i][j] == 'o' || lines[i][j] == 'O') { set_val(u, i, j, 'o'); }
         }
         if (i != 0) { free(lines[i]); }
     }
@@ -81,7 +81,7 @@ void write_out_file(FILE *outfile, board u){
     get_win_run(o_win, o_win_run, u->width);
     for (int i = 0; i < u->height; i++) {
         for (int j = 0; j < u->width; j++) {
-            char token = getVal(u, i, j);
+            char token = get_val(u, i, j);
             if (token == 'x' && (x_win.is_win && IN_RUN(x_win_run, i, j))) { token = 'X'; }
             else if (token == 'o' && (o_win.is_win && IN_RUN(o_win_run, i, j))) { token = 'O'; }
             fprintf(outfile, "%c", token);
@@ -97,8 +97,8 @@ char next_player(board u){
     int num_o = 0; // Create counters for each player
     for (int i = 0; i < u->height; i++) {
         for (int j = 0; j < u->width; j++) {
-            if (getVal(u, i, j) == 'o') { num_o++; }
-            else if (getVal(u, i, j) == 'x') { num_x++; } // Increment counters accordingly
+            if (get_val(u, i, j) == 'o') { num_o++; }
+            else if (get_val(u, i, j) == 'x') { num_x++; } // Increment counters accordingly
         }
     }
     if (num_x <= num_o) { return 'x'; } // Make comparison - x goes first so should be returned if equal
@@ -132,7 +132,7 @@ int is_valid_move(struct move m, board u){
     int real_row = get_real_row(u, m.row); // Convert the move data to indices 
     if ((real_row < 0 || real_row >= u->height) && m.row != 0) { return 0; } // Check bound on row. No need to check if below zero since -1 indicates no rotation (as m.row was 0)
     if (real_col >= u->width || real_col < 0) { return 0; } // Check bounds on column. Must be between 0 and the max index, which is width-1
-    if (getVal(u, 0, real_col) != '.') { return 0; } // Check that there's actually room to place the new token at the top of the grid
+    if (get_val(u, 0, real_col) != '.') { return 0; } // Check that there's actually room to place the new token at the top of the grid
     return 1; // If it passes all these tests, it's a winning move so return 1
 }
 
@@ -150,24 +150,24 @@ void play_move(struct move m, board u){
     validate_pointer(u, 6);
     if (!is_valid_move(m, u)) { error(2); }
     char token = next_player(u); // Gets the token that will be played
-    setVal(u, 0, m.column-1, token); // Place it in the top row
+    set_val(u, 0, m.column-1, token); // Place it in the top row
     resolve_gravity_single(u, 0, m.column-1); // Apply gravity to let it fall
     if (m.row == 0) { return; } // If m.row was zero then there is no need to rotate
     int real_row = get_real_row(u, m.row); // Otherwise get the array index for the move's row
     if (m.row > 0) { // If rotating to the right
-        char last = getVal(u, real_row, u->width-1); // Rightmost column becomes leftmost so start by copying that
+        char last = get_val(u, real_row, u->width-1); // Rightmost column becomes leftmost so start by copying that
         for (int i = 0; i < u->width; i++) { // Iterate across the row left to right
-            char tmp = getVal(u, real_row, i);
-            setVal(u, real_row, i, last);
+            char tmp = get_val(u, real_row, i);
+            set_val(u, real_row, i, last);
             last = tmp; // Swap the item in last with the ith column
             resolve_gravity_above(u, real_row, i); // Apply gravity on the column
         }
     }
     else { // If rotating to the right, the process is the same but right-to-left
-        char last = getVal(u, real_row, 0);
+        char last = get_val(u, real_row, 0);
         for (int i = u->width-1; i >= 0; i--) {
-            char tmp = getVal(u, real_row, i);
-            setVal(u, real_row, i, last);
+            char tmp = get_val(u, real_row, i);
+            set_val(u, real_row, i, last);
             last = tmp;
             resolve_gravity_above(u, real_row, i);
         } 
@@ -181,8 +181,8 @@ win find_win(board u, char player) {
     // Check horizontal wins
     for (int i = 0; i < u->height; i++) {
         for (int j = 0; j < u->width; j++) {
-            char token = getVal(u, i, j);
-            if (token == player && getVal(u, i, real_modulo(j+1, u->width)) == token && getVal(u, i, real_modulo(j+2, u->width)) == token && getVal(u, i, real_modulo(j+3, u->width)) == token) {
+            char token = get_val(u, i, j);
+            if (token == player && get_val(u, i, real_modulo(j+1, u->width)) == token && get_val(u, i, real_modulo(j+2, u->width)) == token && get_val(u, i, real_modulo(j+3, u->width)) == token) {
                 return (win) {i, j, 0, 1};
             }
         }
@@ -190,17 +190,17 @@ win find_win(board u, char player) {
     // Check vertical and diagonal wins
     for (int i = 0; i < u->height-3; i++) {
         for (int j = 0; j < u->width; j++) {
-            char token = getVal(u, i, j);
+            char token = get_val(u, i, j);
             // Check vertical
-            if (token == player && getVal(u, i+1, j) == token && getVal(u, i+2, j) == token && getVal(u, i+3, j) == token) {
+            if (token == player && get_val(u, i+1, j) == token && get_val(u, i+2, j) == token && get_val(u, i+3, j) == token) {
                 return (win) {i, j, 2, 1};
             }
             // Check diagonal y = -x
-            if (token == player && getVal(u, i+1, real_modulo(j+1, u->width)) == token && getVal(u, i+2, real_modulo(j+2, u->width)) == token && getVal(u, i+3, real_modulo(j+3, u->width)) == token) {
+            if (token == player && get_val(u, i+1, real_modulo(j+1, u->width)) == token && get_val(u, i+2, real_modulo(j+2, u->width)) == token && get_val(u, i+3, real_modulo(j+3, u->width)) == token) {
                 return (win) {i, j, 3, 1};
             }
             // Check diagonal y = x
-            if (token == player && getVal(u, i+1, real_modulo(j-1, u->width)) == token && getVal(u, i+2, real_modulo(j-2, u->width)) == token && getVal(u, i+3, real_modulo(j-3, u->width)) == token) {
+            if (token == player && get_val(u, i+1, real_modulo(j-1, u->width)) == token && get_val(u, i+2, real_modulo(j-2, u->width)) == token && get_val(u, i+3, real_modulo(j-3, u->width)) == token) {
                 return (win) {i, j, 1, 1};
             }
         }
@@ -249,17 +249,17 @@ int get_real_row(board u, int original_row) { // Converts the user-friendly row 
 void resolve_gravity_single(board u, int real_row, int real_col) { // Applies the effects of gravity to a SINGLE token
     validate_pointer(u, 6);
     if (real_row == u->height-1) { return; } // If we're at the bottom row, no problem
-    if (getVal(u, real_row+1, real_col) != '.') { return; } // If the space below us is occupied, also no problem
+    if (get_val(u, real_row+1, real_col) != '.') { return; } // If the space below us is occupied, also no problem
     int new_row = real_row;
-    while (!(new_row == u->height-1) && !(getVal(u, new_row+1, real_col) != '.')) { new_row++; }; // Count through rows until one of the "no problem" conditions is met
-    setVal(u, new_row, real_col, getVal(u, real_row, real_col)); // Copy the token into its new position
-    setVal(u, real_row, real_col, '.'); // Leave an empty space where it used to be
+    while (!(new_row == u->height-1) && !(get_val(u, new_row+1, real_col) != '.')) { new_row++; }; // Count through rows until one of the "no problem" conditions is met
+    set_val(u, new_row, real_col, get_val(u, real_row, real_col)); // Copy the token into its new position
+    set_val(u, real_row, real_col, '.'); // Leave an empty space where it used to be
 }
 
 void resolve_gravity_above(board u, int real_row, int real_col) {
     validate_pointer(u, 6);
     for (int i = real_row; i >= 0; i--) { // A token falling can only affect spaces directly above it, so iterate through those
-        if (getVal(u, i, real_col) != '.') {
+        if (get_val(u, i, real_col) != '.') {
             resolve_gravity_single(u, i, real_col); // And apply gravity if they contain a token
         }
     }
@@ -313,7 +313,7 @@ board copy_board(board u) {
     return v;
 }
 
-char getVal(board u, int row, int col) {
+char get_val(board u, int row, int col) {
     int index = ((row*u->width) + col)/TOKENS_IN_INT; // Calculates the index of the integer we need to fetch in the grid
     int bit_index = ((row*u->width) + col)%TOKENS_IN_INT; // Calculates the index of the bit pair within that int we need
     unsigned int stored_bytes = u->grid[index]; // Grabs the int from the grid array
@@ -325,7 +325,7 @@ char getVal(board u, int row, int col) {
     else { return '.'; }
 }
 
-void setVal(board u, int row, int col, char token) {
+void set_val(board u, int row, int col, char token) {
     int index = ((row*u->width) + col)/TOKENS_IN_INT;
     int bit_index = ((row*u->width) + col)%TOKENS_IN_INT;
     unsigned int stored_bytes = u->grid[index]; // Same as getVal up to here
