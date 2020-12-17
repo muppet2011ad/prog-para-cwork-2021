@@ -229,7 +229,7 @@ void get_win_run(win w, int *run, int width) {
         case 2:
             for (int i = 1; i < 4; i++) {
                 run[2*i] = w.real_row_start+i;
-                run[2*(i)+1] = w.real_col_start-i;
+                run[2*(i)+1] = w.real_col_start;
             }
             break;
         case 3:
