@@ -8,6 +8,7 @@
 #include"connect4.h"
 
 #define TOKENS_IN_INT (sizeof(int)*4)
+#define IN_RUN(run, i, j) ((run[0] == i && run[1] == j) || (run[2] == i && run[3] == j) || (run[4] == i && run[5] == j) || (run[6] == i && run[7] == j))
 
 typedef struct win_structure {
     int real_row_start;
@@ -24,6 +25,7 @@ win find_win(board u, char player);
 int real_modulo(int a, int b);
 board copy_board(board u);
 void capitalise_win(char **display, win w, int width);
+void get_win_run(win w, int *run, int width);
 void validate_pointer(void *ptr, int errtype);
 void error(int type);
 char getVal(board u, int row, int col);
@@ -73,25 +75,21 @@ void write_out_file(FILE *outfile, board u){
     validate_pointer(outfile, 3);
     validate_pointer(u, 6);
     win x_win = find_win(u, 'x');
+    int x_win_run[8];
+    get_win_run(x_win, x_win_run, u->width);
     win o_win = find_win(u, 'o');
-    char **display = malloc(sizeof(char*)*u->height);
-    validate_pointer(display, 7);
+    int o_win_run[8];
+    get_win_run(o_win, o_win_run, u->width);
     for (int i = 0; i < u->height; i++) {
-        display[i] = malloc(u->width+1);
-        validate_pointer(display[i], 7);
-        display[i][u->width] = '\0';
         for (int j = 0; j < u->width; j++) {
-            display[i][j] = getVal(u, i, j);
+            char token = getVal(u, i, j);
+            if (token == 'x' && (x_win.is_win && IN_RUN(x_win_run, i, j))) { token = 'X'; }
+            else if (token == 'o' && (o_win.is_win && IN_RUN(o_win_run, i, j))) { token = 'O'; }
+            fprintf(outfile, "%c", token);
         }
-    }
-    if (x_win.is_win) { capitalise_win(display, x_win, u->width); }
-    if (o_win.is_win) { capitalise_win(display, o_win, u->width); }
-    for (int i = 0; i < u->height; i++) {
-        fprintf(outfile, "%s\n", display[i]);
-        free(display[i]);
+        fprintf(outfile, "\n");
     }
     fprintf(outfile, "\n");
-    free(display);
 }
 
 char next_player(board u){
@@ -236,6 +234,38 @@ void capitalise_win(char **display, win w, int width) {
             display[w.real_row_start+1][real_modulo(w.real_col_start+1, width)] = token;
             display[w.real_row_start+2][real_modulo(w.real_col_start+2, width)] = token;
             display[w.real_row_start+3][real_modulo(w.real_col_start+3, width)] = token;
+            break;
+    }
+}
+
+void get_win_run(win w, int *run, int width) {
+    if (!w.is_win) { return; }
+    run[0] = w.real_row_start;
+    run[1] = w.real_col_start;
+    switch (w.direction) {
+        case 0:
+            for (int i = 1; i < 4; i++) {
+                run[2*i] = w.real_row_start;
+                run[2*(i)+1] = real_modulo(w.real_col_start+i, width);
+            }
+            break;
+        case 1:
+            for (int i = 1; i < 4; i++) {
+                run[2*i] = w.real_row_start+i;
+                run[2*(i)+1] = real_modulo(w.real_col_start-i, width);
+            }
+            break;
+        case 2:
+            for (int i = 1; i < 4; i++) {
+                run[2*i] = w.real_row_start+i;
+                run[2*(i)+1] = w.real_col_start-i;
+            }
+            break;
+        case 3:
+            for (int i = 1; i < 4; i++) {
+                run[2*i] = w.real_row_start+i;
+                run[2*(i)+1] = real_modulo(w.real_col_start+i, width);
+            }
             break;
     }
 }
