@@ -38,6 +38,7 @@ board setup_board(){
 }
 
 void cleanup_board(board u){
+    validate_pointer(u, 6);
     if (!(u->grid == NULL)) { // Only try to free the grid data if it's been assigned, otherwise we'll segfault trying to free NULL
         for (int i = 0; i < u->height; i++) {
             free(u->grid[i]); // Free each row
@@ -48,12 +49,14 @@ void cleanup_board(board u){
 }
 
 void read_in_file(FILE *infile, board u){
+    validate_pointer(u, 6);
     int rows = 0;
     char **lines = read_lines(infile, &rows); // Read in the lines from the file given
     u->grid = lines; // Copy pointer to lines into board
     u->height = rows;
     u->width = strlen(lines[0]); // Work out the bounds of the board
     for (int i = 0; i < u->height; i++) {
+        if (strlen(u->grid[i]) != strlen(lines[0])) { error(5); }
         for (int j = 0; j < u->width; j++) { // Correct any capitals to lowercase and remove any invalid characters
             if (u->grid[i][j] == 'X') { u->grid[i][j] = 'x'; }
             else if (u->grid[i][j] == 'O') { u->grid[i][j] = 'o'; }
@@ -63,7 +66,9 @@ void read_in_file(FILE *infile, board u){
 }
 
 void write_out_file(FILE *outfile, board u){
+    win test = {23423, 511, 1, 1};
     validate_pointer(outfile, 3);
+    validate_pointer(u, 6);
     win x_win = find_win(u, 'x');
     win o_win = find_win(u, 'o');
     board display;
@@ -83,6 +88,7 @@ void write_out_file(FILE *outfile, board u){
 }
 
 char next_player(board u){
+    validate_pointer(u, 6);
     int num_x = 0;
     int num_o = 0; // Create counters for each player
     for (int i = 0; i < u->height; i++) {
@@ -96,6 +102,7 @@ char next_player(board u){
 }
 
 char current_winner(board u){
+    validate_pointer(u, 6);
     win x_win = find_win(u, 'x');
     win o_win = find_win(u, 'o');
     if (x_win.is_win && o_win.is_win) { return 'd'; }
@@ -105,6 +112,7 @@ char current_winner(board u){
 }
 
 struct move read_in_move(board u){
+    validate_pointer(u, 6);
     int col, row;
     printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
     if (scanf("%d", &col) != 1) { error(4); }
@@ -115,7 +123,8 @@ struct move read_in_move(board u){
 }
 
 int is_valid_move(struct move m, board u){
-    short real_col = m.column - 1;
+    validate_pointer(u, 6);
+    int real_col = m.column - 1;
     int real_row = get_real_row(u, m.row); // Convert the move data to indices 
     if ((real_row < 0 || real_row >= u->height) && m.row != 0) { return 0; } // Check bound on row. No need to check if below zero since -1 indicates no rotation (as m.row was 0)
     if (real_col >= u->width || real_col < 0) { return 0; } // Check bounds on column. Must be between 0 and the max index, which is width-1
@@ -124,6 +133,7 @@ int is_valid_move(struct move m, board u){
 }
 
 char is_winning_move(struct move m, board u){
+    validate_pointer(u, 6);
     if (!is_valid_move(m, u)) { error(2); }
     board test_board = copy_board(u); // Create a board for testing the move so we don't accidentally ruin the game board
     play_move(m, test_board); // Play the move on the test board
@@ -133,6 +143,7 @@ char is_winning_move(struct move m, board u){
 }
 
 void play_move(struct move m, board u){
+    validate_pointer(u, 6);
     if (!is_valid_move(m, u)) { error(2); }
     char token = next_player(u); // Gets the token that will be played
     u->grid[0][m.column-1] = token; // Place it in the top row
@@ -162,6 +173,7 @@ void play_move(struct move m, board u){
 //You may put additional functions here if you wish.
 
 win find_win(board u, char player) {
+    validate_pointer(u, 6);
     // Check horizontal wins
     for (int i = 0; i < u->height; i++) {
         for (int j = 0; j < u->width; j++) {
@@ -194,6 +206,8 @@ win find_win(board u, char player) {
 }
 
 void capitalise_win(board u, win w) {
+    validate_pointer(u, 6);
+    if (!w.is_win) { return; } // If the win isn't really a win, just don't do anything
     char token = toupper(u->grid[w.real_row_start][w.real_col_start]);
     u->grid[w.real_row_start][w.real_col_start] = token;
     switch (w.direction) {
@@ -221,10 +235,12 @@ void capitalise_win(board u, win w) {
 }
 
 int get_real_row(board u, int original_row) { // Converts the user-friendly row numbering (+/-1 is bottom row, +/-n is top) to my row numbering (0 is top row, n-1 is bottom row)
+    validate_pointer(u, 6);
     return u->height - abs(original_row);
 }
 
 void resolve_gravity_single(board u, int real_row, int real_col) { // Applies the effects of gravity to a SINGLE token
+    validate_pointer(u, 6);
     if (real_row == u->height-1) { return; } // If we're at the bottom row, no problem
     if (u->grid[real_row+1][real_col] != '.') { return; } // If the space below us is occupied, also no problem
     int new_row = real_row;
@@ -234,6 +250,7 @@ void resolve_gravity_single(board u, int real_row, int real_col) { // Applies th
 }
 
 void resolve_gravity_above(board u, int real_row, int real_col) {
+    validate_pointer(u, 6);
     for (int i = real_row; i >= 0; i--) { // A token falling can only affect spaces directly above it, so iterate through those
         if (u->grid[i][real_col] != '.') {
             resolve_gravity_single(u, i, real_col); // And apply gravity if they contain a token
@@ -278,6 +295,7 @@ char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d 
 }
 
 board copy_board(board u) {
+    validate_pointer(u, 6);
     board v = setup_board();
     v->width = u->width;
     v->height = u->height;
@@ -297,14 +315,16 @@ void validate_pointer(void *ptr, int errtype) { // Checks if pointer is null, ca
 }
 
 void error(int type) {
-    const char *messages[] = {  "Failed to allocate memory for a board.", 
-                                "Failed to allocate memory when reading in string.", 
-                                "Move is not valid.", 
-                                "File pointer is null.", 
-                                "Invalid input."  
+    const char *messages[] = {  "Failed to allocate memory for a board.", // 0
+                                "Failed to allocate memory when reading in string.", // 1
+                                "Move is not valid. It is either out of bounds or the space is occupied.", // 2
+                                "Could not open file for reading/writing.", // 3
+                                "Invalid input - make sure you input an integer.", // 4
+                                "Board has inconsistent number of columns.", // 5
+                                "Board does not exist." // 6
                             };
     fprintf(stderr, "Error: %s\n", messages[type]);
-    exit(type+1);
+    exit(1);
 }
 
 // int main () {
