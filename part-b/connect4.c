@@ -63,7 +63,10 @@ void read_in_file(FILE *infile, board u){
             if (lines[i][j] == 'x' || lines[i][j] == 'X') { setVal(u, i, j, 'x'); }
             else if (lines[i][j] == 'o' || lines[i][j] == 'O') { setVal(u, i, j, 'o'); }
         }
+        if (i != 0) { free(lines[i]); }
     }
+    free(lines[0]);
+    free(lines);
 }
 
 void write_out_file(FILE *outfile, board u){
@@ -85,6 +88,7 @@ void write_out_file(FILE *outfile, board u){
     if (o_win.is_win) { capitalise_win(display, o_win, u->width); }
     for (int i = 0; i < u->height; i++) {
         fprintf(outfile, "%s\n", display[i]);
+        free(display[i]);
     }
     fprintf(outfile, "\n");
     free(display);
