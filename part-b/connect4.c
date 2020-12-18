@@ -55,31 +55,30 @@ void read_in_file(FILE *infile, board u) {
     validate_pointer(u, 6); // Validate both pointers given
     u->height = 0;
     u->width = -1; // Initialise values for height and width
-    u->grid = malloc(sizeof(int)); // Allocate initial memory for the grid
+    u->grid = calloc(1, sizeof(int)); // Allocate initial memory for the grid
     validate_pointer(u->grid, 0); // Validate the memory allocation
     int members = 0; // Initially we store no tokens
     int max_members = TOKENS_IN_INT; // The maximum for one integer is the macro TOKENS_IN_INT
-    char input_buffer[514]; // Create an input buffer (512 columns + \n + \0)
-    while (fgets(input_buffer, 514, infile)) { // Read until we hit EOF
-        if (u->width == -1) { // If we haven't set the width yet
-            u->width = strlen(input_buffer); // Get the length of the line
-            if (input_buffer[u->width-1] == '\n') { u->width--; } // Make sure to not include the \n in our count
+    int j = 0;
+    char buffer;
+    while (fscanf(infile, "%c", &buffer) != EOF) { // Keep reading characters until we reach EOF
+        if (buffer == '\n' || buffer == '\0') { // If we reach the end of a line
+            u->height++; // Increment our height counter
+            if (u->width == -1) { u->width = j; } // Set the width if it hasn't been set
+            else if (u->width != j) { error(5); } // Throw an error if this line hasn't been as long as expected
+            j = 0; // Reset the column counter
         }
-        else { // If we have set the width, we should check against it
-            int len = strlen(input_buffer); // Grab the length
-            if ((input_buffer[len-1] == '\n' && len-1 != u->width) || (input_buffer[len-1] == '\0' && len != u->width)) { error(5); } 
-            // Slightly messy condition but will throw an error if the length of the line is different
+        else {
+            members++; // Increase the number of members we need to store
+            if (members > max_members) { // If we need more room
+                u->grid = realloc(u->grid, ((max_members/TOKENS_IN_INT)+1)*sizeof(int)); // Realloc based on how much room we need
+                validate_pointer(u->grid, 0); // Validate that worked
+                u->grid[((max_members/TOKENS_IN_INT))] = 0; // Zero the byte
+                max_members += TOKENS_IN_INT; // Calculate the new capacity of the grid
+            }
+            if (buffer != '.') { set_val(u, u->height, j, tolower(buffer)); } // Copy the character into the grid
+            j++; // Increment the column counter
         }
-        members += u->width; // Increment our counter of members to reflect how many we need to store
-        if (members > max_members) { // If we need more room
-            u->grid = realloc(u->grid, ((members/TOKENS_IN_INT) + (members%TOKENS_IN_INT != 0))*sizeof(int)); // Realloc based on how much room we need
-            validate_pointer(u->grid, 0); // Validate that worked
-            max_members = ((members/TOKENS_IN_INT) + (members%TOKENS_IN_INT != 0))*TOKENS_IN_INT; // Calculate the new capacity of the grid
-        }
-        for (int j = 0; j < u->width; j++) { // Iterate through the line we've read
-            set_val(u, u->height, j, tolower(input_buffer[j])); // Copy each character into the grid
-        }
-        u->height++; // Increment our counters
     }
 }
 
