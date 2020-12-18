@@ -50,26 +50,37 @@ void cleanup_board(board u){
     free(u); // Free the struct
 }
 
-void read_in_file(FILE *infile, board u){
+void read_in_file(FILE *infile, board u) {
     validate_pointer(infile, 3);
-    validate_pointer(u, 6);
-    int rows = 0;
-    char **lines = read_lines(infile, &rows); // Read in the lines from the file given
-    u->height = rows;
-    u->width = strlen(lines[0]); // Work out the bounds of the board
-    int members = u->height*u->width;
-    u->grid = calloc((members/TOKENS_IN_INT) + (members%TOKENS_IN_INT != 0), sizeof(int));
-    validate_pointer(u->grid, 0);
-    for (int i = 0; i < u->height; i++) {
-        if (strlen(lines[i]) != strlen(lines[0])) { error(5); }
-        for (int j = 0; j < u->width; j++) { // Correct any capitals to lowercase and remove any invalid characters
-            if (lines[i][j] == 'x' || lines[i][j] == 'X') { set_val(u, i, j, 'x'); }
-            else if (lines[i][j] == 'o' || lines[i][j] == 'O') { set_val(u, i, j, 'o'); }
+    validate_pointer(u, 6); // Validate both pointers given
+    u->height = 0;
+    u->width = -1; // Initialise values for height and width
+    u->grid = malloc(sizeof(int)); // Allocate initial memory for the grid
+    validate_pointer(u->grid, 0); // Validate the memory allocation
+    int members = 0; // Initially we store no tokens
+    int max_members = TOKENS_IN_INT; // The maximum for one integer is the macro TOKENS_IN_INT
+    char input_buffer[514]; // Create an input buffer (512 columns + \n + \0)
+    while (fgets(input_buffer, 514, infile)) { // Read until we hit EOF
+        if (u->width == -1) { // If we haven't set the width yet
+            u->width = strlen(input_buffer); // Get the length of the line
+            if (input_buffer[u->width-1] == '\n') { u->width--; } // Make sure to not include the \n in our count
         }
-        if (i != 0) { free(lines[i]); }
+        else { // If we have set the width, we should check against it
+            int len = strlen(input_buffer); // Grab the length
+            if ((input_buffer[len-1] == '\n' && len-1 != u->width) || (input_buffer[len-1] == '\0' && len != u->width)) { error(5); } 
+            // Slightly messy condition but will throw an error if the length of the line is different
+        }
+        members += u->width; // Increment our counter of members to reflect how many we need to store
+        if (members > max_members) { // If we need more room
+            u->grid = realloc(u->grid, ((members/TOKENS_IN_INT) + (members%TOKENS_IN_INT != 0))*sizeof(int)); // Realloc based on how much room we need
+            validate_pointer(u->grid, 0); // Validate that worked
+            max_members = ((members/TOKENS_IN_INT) + (members%TOKENS_IN_INT != 0))*TOKENS_IN_INT; // Calculate the new capacity of the grid
+        }
+        for (int j = 0; j < u->width; j++) { // Iterate through the line we've read
+            set_val(u, u->height, j, tolower(input_buffer[j])); // Copy each character into the grid
+        }
+        u->height++; // Increment our counters
     }
-    free(lines[0]);
-    free(lines);
 }
 
 void write_out_file(FILE *outfile, board u){
@@ -276,33 +287,6 @@ int real_modulo(int a, int b) { // C's modulo operator returns -ve values with -
     }
 }
 
-char **read_lines (FILE* src, int *num_lines) { // Mostly copied from my part d with a few alterations since the functionality is very similar
-    validate_pointer(src, 3);
-    char **lines = calloc(5, sizeof(char*));
-    validate_pointer(lines, 1);
-    int lines_arr_size = 5;
-    char input_buffer[514]; // Create buffer to receive input - 514 as it allows 512 chars + \n + \0
-    while (!feof(src)) { // Until we reach EOF
-        char *success = fgets(input_buffer, 514, src); // Read from input stream
-        if (success == NULL) { // Check we haven't just read to EOF
-            break; // If we have, stop looping
-        }
-        int line_length = strlen(input_buffer); // Get the length of the string
-        char *new_line = malloc(line_length); // Allocate just enough memory for it
-        validate_pointer(new_line, 1);
-        strncpy(new_line, input_buffer, line_length); // Copy from input buffer to the newly allocated memory
-        new_line[line_length-1] = '\0';
-        if (*num_lines >= lines_arr_size) { // If we need to expand the array
-            lines = realloc(lines, (lines_arr_size+5)*sizeof(char*)); // Expand it
-            validate_pointer(lines, 1);
-            lines_arr_size += 5; // Update with new array size
-        }
-        lines[*num_lines] = new_line; // Add the new line to the array
-        (*num_lines)++; // Increment the counter of items in the array
-    }
-    return lines; // Return a pointer to the array
-}
-
 board copy_board(board u) {
     validate_pointer(u, 6);
     board v = setup_board();
@@ -357,19 +341,3 @@ void error(int type) {
     fprintf(stderr, "Error: %s\n", messages[type]);
     exit(1);
 }
-
-// int main () {
-//     board new_board = setup_board();
-//     FILE *testfile = fopen("test_input1.txt", "r");
-//     read_in_file(testfile, new_board);
-//     fclose(testfile);
-//     write_out_file(stdout, new_board);
-//     struct move test = {4, 0};
-//     play_move(test, new_board);
-//     write_out_file(stdout, new_board);
-//     test = (struct move) {2, 2};
-//     play_move(test, new_board);
-//     write_out_file(stdout, new_board);
-//     cleanup_board(new_board);
-//     return 0;
-// }
