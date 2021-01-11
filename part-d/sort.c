@@ -156,7 +156,10 @@ int str_def_cmp (const void *str1, const void *str2) {
     char *lower2 = malloc(strlen(*(char**) str2)+1);
     strcpy(lower2, *(char**) str2);
     lower_string(lower2);
-    int result = strcmp(lower1, lower2);
+    int result = strcoll(lower1, lower2);
+    if (!result) {
+        result = strcoll(*(char**) str1, *(char**) str2);
+    }
     free(lower1);
     free(lower2);
     return result;
