@@ -13,6 +13,7 @@ int str_num_cmp (const void *str1, const void *str2);
 long long get_str_num (char* str, int *trailing_start);
 void cleanup(char **lines, int num_lines);
 void usage_info();
+void lower_string(char* string);
 
 typedef struct flags {
     unsigned int file_specified : 1;
@@ -149,7 +150,16 @@ void out_lines (FILE* dest, char **lines, int num_lines, int reverse) {
 }
 
 int str_def_cmp (const void *str1, const void *str2) {
-    return strcmp(*(char**) str1, *(char**) str2);
+    char *lower1 = malloc(strlen(*(char**) str1)+1);
+    strcpy(lower1, *(char**) str1);
+    lower_string(lower1);
+    char *lower2 = malloc(strlen(*(char**) str2)+1);
+    strcpy(lower2, *(char**) str2);
+    lower_string(lower2);
+    int result = strcmp(lower1, lower2);
+    free(lower1);
+    free(lower2);
+    return result;
 }
 
 int str_num_cmp (const void *str1, const void *str2) {
@@ -163,7 +173,9 @@ int str_num_cmp (const void *str1, const void *str2) {
     if (a_numeric < b_numeric) { return -1; }
     else if (a_numeric > b_numeric) { return 1; } // If these values are different, we have the comparison done and can finish here
     else {
-        return strcmp(&(a[counter_a]), &(b[counter_b])); // Otherwise compare the rest of the string normally (per rule 2)
+        char *a_string = &(a[counter_a]);
+        char *b_string = &(b[counter_b]);
+        return str_def_cmp(&a_string, &b_string); // Otherwise compare the rest of the string normally (per rule 2)
     }
 }
 
@@ -183,6 +195,13 @@ long long get_str_num (char* str, int *trailing_start) { // Looks for number fro
        numerical_section[counter] = '\0'; // Add the null-terminator (strncpy doesn't do this automatically which causes issues)
        return atoll(numerical_section); // Convert this to a long long and return
    }
+}
+
+void lower_string(char* string) {
+    int length = strlen(string);
+    for (int i = 0; i < length; i++) {
+        string[i] = tolower(string[i]);
+    }
 }
 
 void cleanup(char **lines, int num_lines) {
