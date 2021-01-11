@@ -158,7 +158,7 @@ int str_def_cmp (const void *str1, const void *str2) {
     lower_string(lower2);
     int result = strcoll(lower1, lower2);
     if (!result) {
-        result = strcoll(*(char**) str1, *(char**) str2);
+        result = -strcoll(*(char**) str1, *(char**) str2);
     }
     free(lower1);
     free(lower2);
