@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <locale.h>
 
 #define LINES_ARR_LEN 5 // Size interval for the lines array
 #define BUFFER_SIZE 1024 // Max line length when reading in data
@@ -24,6 +25,7 @@ typedef struct flags {
 } flags; // Bitfield to store flags (saves an incredible 16 bytes of memory on my machine)
 
 int main(int argc, char *argv[]) {
+    setlocale(LC_ALL, "");
     int num_lines = 0;
     int lines_arr_size = LINES_ARR_LEN;
     char **lines = calloc(LINES_ARR_LEN, sizeof(char*)); // Allocate memory to store lines
@@ -150,19 +152,7 @@ void out_lines (FILE* dest, char **lines, int num_lines, int reverse) {
 }
 
 int str_def_cmp (const void *str1, const void *str2) {
-    char *lower1 = malloc(strlen(*(char**) str1)+1);
-    strcpy(lower1, *(char**) str1);
-    lower_string(lower1);
-    char *lower2 = malloc(strlen(*(char**) str2)+1);
-    strcpy(lower2, *(char**) str2);
-    lower_string(lower2);
-    int result = strcoll(lower1, lower2);
-    if (!result) {
-        result = -strcoll(*(char**) str1, *(char**) str2);
-    }
-    free(lower1);
-    free(lower2);
-    return result;
+    return strcoll(*(char**) str1, *(char**) str2);
 }
 
 int str_num_cmp (const void *str1, const void *str2) {
@@ -176,9 +166,7 @@ int str_num_cmp (const void *str1, const void *str2) {
     if (a_numeric < b_numeric) { return -1; }
     else if (a_numeric > b_numeric) { return 1; } // If these values are different, we have the comparison done and can finish here
     else {
-        char *a_string = &(a[counter_a]);
-        char *b_string = &(b[counter_b]);
-        return str_def_cmp(&a_string, &b_string); // Otherwise compare the rest of the string normally (per rule 2)
+        return strcoll(&(a[counter_a]), &(b[counter_b])); // Otherwise compare the rest of the string normally (per rule 2)
     }
 }
 
